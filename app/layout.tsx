@@ -1,9 +1,8 @@
-import './globals.css'
-import Link from 'next/link'
+import "./globals.css"
 
 export const metadata = {
-  title: 'Nexus Intelligence',
-  description: 'Crypto Narrative Risk Intelligence Platform',
+  title: "Nexus Intelligence",
+  description: "AI-Powered FUD Detection Platform",
 }
 
 export default function RootLayout({
@@ -13,47 +12,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-bg-main text-ink-primary antialiased">
-        
-        {/* Top Navigation */}
-        <header className="border-b border-border bg-bg-card">
-          <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-            
-            {/* Logo / Home Link */}
-            <Link
-              href="/"
-              className="font-semibold text-lg hover:text-ink-muted transition-colors"
-            >
-              Nexus
-            </Link>
+      <body className="bg-gray-50 text-gray-900">
+        <div className="min-h-screen">
+          <header className="border-b bg-white">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+              <h1 className="text-xl md:text-2xl font-bold">
+                Nexus Intelligence
+              </h1>
+            </div>
+          </header>
 
-            {/* Navigation Links */}
-            <nav className="flex items-center gap-6 text-sm">
-              <Link href="/dashboard" className="text-ink-muted hover:text-ink-primary transition-colors">  
-                Dashboard
-              </Link>
-
-              <Link href="/influencers" className="text-ink-muted hover:text-ink-primary transition-colors">
-                Influencers
-              </Link>
-
-              <Link href="/entities" className="text-ink-muted hover:text-ink-primary transition-colors">
-                Entities
-              </Link>
-
-              <Link href="/fud" className="text-ink-muted hover:text-ink-primary transition-colors">
-                Fud
-              </Link>
-            </nav>
-
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="max-w-7xl mx-auto px-6 py-8">
-          {children}
-        </main>
-
+          <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   )
