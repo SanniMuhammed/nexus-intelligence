@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Crypto Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #05050a;
+    --bg-secondary: #0a0a14;
+    --bg-card: #0d0d1a;
+    --bg-card-hover: #111128;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(99,102,241,0.3);
+    --accent-blue: #4f8fff;
+    --accent-purple: #8b5cf6;
+    --accent-cyan: #22d3ee;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --text-primary: #f0f0ff;
+    --text-secondary: #7878a0;
+    --text-muted: #3d3d5c;
+    --glow-blue: 0 0 40px rgba(79,143,255,0.15);
+    --glow-purple: 0 0 40px rgba(139,92,246,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* Ambient glow orbs */
+  .ambient-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(79,143,255,0.08) 0%, transparent 70%); top: -200px; left: -100px; }
+  .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%); bottom: -100px; right: -100px; }
+  .orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(34,211,238,0.05) 0%, transparent 70%); top: 40%; left: 40%; }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(5,5,10,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 0 20px rgba(79,143,255,0.4);
+  }
+
+  .logo-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.15em;
+    margin-left: 2px;
+  }
+
+  .topbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-item {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .nav-item:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-item.active { color: var(--text-primary); background: rgba(79,143,255,0.12); border: 1px solid rgba(79,143,255,0.2); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-green);
+    letter-spacing: 0.1em;
+  }
+
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 10px var(--accent-green);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--accent-green); }
+    50% { opacity: 0.5; box-shadow: 0 0 4px var(--accent-green); }
+  }
+
+  .timestamp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid rgba(79,143,255,0.3);
+    box-shadow: 0 0 15px rgba(79,143,255,0.2);
+  }
+
+  /* LAYOUT */
+  .main-wrapper {
+    position: relative;
+    z-index: 1;
+    padding: 28px 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn-secondary {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Manrope', sans-serif;
+  }
+  .btn-secondary:hover { color: var(--text-primary); background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.12); }
+
+  .btn-primary {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Manrope', sans-serif;
+    box-shadow: 0 0 20px rgba(79,143,255,0.25);
+    letter-spacing: 0.02em;
+  }
+  .btn-primary:hover { box-shadow: 0 0 30px rgba(79,143,255,0.4); transform: translateY(-1px); }
+
+  /* GRID */
+  .grid-top {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .grid-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    align-content: start;
+  }
+
+  .grid-mid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .grid-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+  .card:hover { border-color: rgba(79,143,255,0.15); box-shadow: var(--glow-blue); }
+
+  .card-header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .card-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-blue { background: rgba(79,143,255,0.12); color: var(--accent-blue); border: 1px solid rgba(79,143,255,0.2); }
+  .badge-red { background: rgba(239,68,68,0.12); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.2); }
+  .badge-green { background: rgba(16,185,129,0.12); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.2); }
+  .badge-yellow { background: rgba(245,158,11,0.12); color: var(--accent-yellow); border: 1px solid rgba(245,158,11,0.2); }
+  .badge-purple { background: rgba(139,92,246,0.12); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.2); }
+
+  /* PANIC METER */
+  .panic-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panic-inner {
+    padding: 28px 26px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .panic-score-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .panic-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .panic-denom {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .panic-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    font-weight: 500;
+  }
+
+  .panic-gauge-wrap {
+    width: 100%;
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .panic-gauge-track {
+    width: 100%;
+    height: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    overflow: visible;
+    position: relative;
+  }
+
+  .panic-gauge-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #10b981 0%, #f59e0b 55%, #ef4444 100%);
+    width: 0%;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 15px rgba(245,158,11,0.5);
+  }
+
+  .panic-gauge-thumb {
+    position: absolute;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.5), 0 0 20px rgba(245,158,11,0.6);
+    transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    left: 0%;
+  }
+
+  .panic-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .panic-tick {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+  }
+
+  .panic-labels-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 20px;
+  }
+
+  .panic-label-item {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .panic-sentiment {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 30px;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-yellow);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .panic-data-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+    width: 100%;
+  }
+
+  .panic-data-item {
+    padding: 14px 10px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .panic-data-item:last-child { border-right: none; }
+
+  .panic-data-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .panic-data-key {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* STAT CARDS */
+  .stat-card {
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .stat-card:hover::before { opacity: 1; }
+  .stat-card.accent-blue::before { background: linear-gradient(90deg, transparent, var(--accent-blue), transparent); }
+  .stat-card.accent-purple::before { background: linear-gradient(90deg, transparent, var(--accent-purple), transparent); }
+  .stat-card.accent-red::before { background: linear-gradient(90deg, transparent, var(--accent-red), transparent); }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    margin-bottom: 14px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+
+  .stat-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .delta-up { background: rgba(16,185,129,0.1); color: var(--accent-green); }
+  .delta-down { background: rgba(239,68,68,0.1); color: var(--accent-red); }
+  .delta-neutral { background: rgba(245,158,11,0.1); color: var(--accent-yellow); }
+
+  .stat-sparkline {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 80px;
+    height: 50px;
+    opacity: 0.3;
+  }
+
+  /* MINI CHART IN STAT CARD */
+  .sparkline-svg {
+    width: 80px;
+    height: 50px;
+  }
+
+  /* FUD FEED */
+  .fud-feed {
+    padding: 0;
+  }
+
+  .fud-item {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 4px 1fr auto;
+    gap: 14px;
+    align-items: start;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .fud-item:last-child { border-bottom: none; }
+  .fud-item:hover { background: rgba(255,255,255,0.02); }
+
+  .fud-severity-bar {
+    width: 4px;
+    height: 100%;
+    min-height: 60px;
+    border-radius: 4px;
+    align-self: stretch;
+  }
+
+  .fud-content {}
+
+  .fud-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .fud-source {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .fud-trust {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .fud-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  .fud-headline {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .fud-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 5px;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+  }
+
+  .verdict-dot { width: 5px; height: 5px; border-radius: 50%; }
+
+  .fud-severity-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .severity-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .impact-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .impact-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* LEADERBOARD */
+  .leaderboard-section {
+    padding: 0;
+  }
+
+  .leaderboard-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lb-tab {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .lb-tab.active { color: var(--text-primary); border-bottom-color: var(--accent-blue); }
+  .lb-tab:hover:not(.active) { color: var(--text-secondary); }
+
+  .lb-list {
+    padding: 8px 0;
+  }
+
+  .lb-item {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .lb-item:hover { background: rgba(255,255,255,0.02); }
+
+  .lb-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .lb-info {}
+
+  .lb-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lb-handle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .lb-bar-wrap {
+    width: 70px;
+  }
+
+  .lb-bar-track {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 3px;
+  }
+
+  .lb-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    width: 0%;
+  }
+
+  .lb-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-align: right;
+  }
+
+  .verified-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    font-size: 8px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  /* ENTITY HEALTH */
+  .entity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .entity-item {
+    padding: 18px 22px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .entity-item:hover { background: rgba(255,255,255,0.02); }
+  .entity-item:nth-child(2n) { border-right: none; }
+  .entity-item:nth-last-child(-n+2) { border-bottom: none; }
+
+  /* For odd count - last item full width */
+  .entity-item.full-width {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+
+  .entity-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .entity-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .entity-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .entity-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .entity-type {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .entity-score-display {
+    text-align: right;
+  }
+
+  .entity-score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .entity-score-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .entity-health-bar {
+    height: 5px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .entity-health-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1.4s cubic-bezier(0.4,0,0.2,1);
+    width: 0%;
+  }
+
+  .entity-stats-row {
+    display: flex;
+    gap: 16px;
+  }
+
+  .entity-stat {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .entity-stat span {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* MARKET TICKER */
+  .ticker-bar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    height: 36px;
+    display: flex;
+    align-items: center;
+  }
+
+  .ticker-scroll {
+    display: flex;
+    gap: 40px;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+    padding: 0 20px;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .ticker-symbol { color: var(--text-secondary); font-weight: 500; }
+  .ticker-price { color: var(--text-primary); }
+  .ticker-change-pos { color: var(--accent-green); }
+  .ticker-change-neg { color: var(--accent-red); }
+  .ticker-sep { color: var(--text-muted); opacity: 0.3; }
+
+  /* ACTIVITY CHART */
+  .chart-wrap {
+    padding: 20px 22px;
+    height: 200px;
+    position: relative;
+  }
+
+  /* ALERT BANNER */
+  .alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 22px;
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+
+  .alert-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .alert-text {
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  .alert-text strong {
+    color: var(--accent-red);
+    font-weight: 600;
+  }
+
+  .alert-dismiss {
+    font-size: 16px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.2s;
+  }
+  .alert-dismiss:hover { color: var(--text-secondary); }
+
+  /* SIDEBAR MINI STATS */
+  .mini-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 18px 22px;
+  }
+
+  .mini-stat {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .mini-stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .mini-stat-key {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* ANIMATIONS */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeInUp 0.5s ease both;
+  }
+
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+  .delay-6 { animation-delay: 0.3s; }
+
+  /* GRADIENT TEXT */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* DIVIDER */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 4px 0;
+  }
+
+  /* TOOLTIP */
+  .tooltip-wrap { position: relative; display: inline-flex; }
+  .tooltip-wrap:hover .tooltip { opacity: 1; pointer-events: auto; }
+  .tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a2e;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 50;
+  }
+
+  /* FOOTBAR */
+  .footbar {
+    border-top: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+  }
+
+  .footbar-left {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .footbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .footbar-link {
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .footbar-link:hover { color: var(--text-secondary); }
+
+  /* STATUS PILLS */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 22px 16px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  /* HEATMAP */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    padding: 16px 22px;
+  }
+
+  .heatmap-cell {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.04);
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .heatmap-cell:hover { transform: scale(1.2); z-index: 1; position: relative; }
+
+  /* RISK TAG */
+  .risk-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* NETWORK LINE (decorative) */
+  .network-line {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    opacity: 0.05;
+  }
+
+  /* COUNTER ANIMATION */
+  .counter { transition: all 0.1s; }
+
+  /* Loading shimmer */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* PANEL GLOW ACCENT */
+  .panel-glow-blue { box-shadow: 0 0 0 1px rgba(79,143,255,0.08), 0 20px 60px rgba(79,143,255,0.06); }
+  .panel-glow-purple { box-shadow: 0 0 0 1px rgba(139,92,246,0.08), 0 20px 60px rgba(139,92,246,0.06); }
+  .panel-glow-red { box-shadow: 0 0 0 1px rgba(239,68,68,0.08), 0 20px 60px rgba(239,68,68,0.06); }
+
+  /* TOP ACCENT LINE */
+  .top-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    opacity: 0.7;
+  }
+
+  /* CORNER MARK */
+  .corner-mark {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    opacity: 0.4;
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+
+<!-- Ambient -->
+<div class="ambient-orb orb-1"></div>
+<div class="ambient-orb orb-2"></div>
+<div class="ambient-orb orb-3"></div>
+
+<!-- MARKET TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-scroll" id="tickerScroll">
+    <!-- will be doubled by JS -->
+    <span class="ticker-item"><span class="ticker-symbol">BTC</span><span class="ticker-price">$97,412.50</span><span class="ticker-change-pos">+2.34%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">ETH</span><span class="ticker-price">$3,847.20</span><span class="ticker-change-pos">+1.87%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">SOL</span><span class="ticker-price">$198.45</span><span class="ticker-change-neg">-0.64%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">BNB</span><span class="ticker-price">$589.10</span><span class="ticker-change-pos">+0.92%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">XRP</span><span class="ticker-price">$2.89</span><span class="ticker-change-pos">+4.21%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">USDT</span><span class="ticker-price">$1.0001</span><span class="ticker-change-pos">+0.01%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">DOGE</span><span class="ticker-price">$0.3847</span><span class="ticker-change-neg">-1.23%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">ADA</span><span class="ticker-price">$1.12</span><span class="ticker-change-pos">+3.45%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">AVAX</span><span class="ticker-price">$42.87</span><span class="ticker-change-neg">-0.88%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">LINK</span><span class="ticker-price">$22.14</span><span class="ticker-change-pos">+5.67%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">DOT</span><span class="ticker-price">$9.34</span><span class="ticker-change-pos">+1.44%</span></span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-item"><span class="ticker-symbol">MATIC</span><span class="ticker-price">$1.07</span><span class="ticker-change-neg">-2.11%</span></span>
+    <span class="ticker-sep">|</span>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">⬡</div>
+    NEXUS
+    <span class="logo-badge">INTELLIGENCE v2.4</span>
+  </div>
+
+  <nav class="topbar-nav">
+    <div class="nav-item active">Overview</div>
+    <div class="nav-item">FUD Radar</div>
+    <div class="nav-item">Entities</div>
+    <div class="nav-item">Influencers</div>
+    <div class="nav-item">Alerts</div>
+    <div class="nav-item">Reports</div>
+  </nav>
+
+  <div class="topbar-right">
+    <div class="live-indicator">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+    <div class="timestamp" id="clock">--:--:-- UTC</div>
+    <div class="avatar">AK</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main-wrapper">
+
+  <!-- ALERT BANNER -->
+  <div class="alert-banner animate-in" id="alertBanner">
+    <span class="alert-icon">⚡</span>
+    <span class="alert-text"><strong>HIGH ALERT:</strong> Abnormal whale movement detected on Binance — 84,000 BTC transferred to unknown wallets in the last 2 hours. Confidence: 91%</span>
+    <span class="alert-dismiss" onclick="document.getElementById('alertBanner').style.display='none'">✕</span>
+  </div>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header animate-in delay-1">
+    <div>
+      <div class="page-title">Intelligence Overview</div>
+      <div class="page-subtitle">Real-time FUD detection, entity monitoring & influencer trust scoring</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary">↓ Export Report</button>
+      <button class="btn-secondary">⚙ Configure</button>
+      <button class="btn-primary">+ New Alert</button>
+    </div>
+  </div>
+
+  <!-- TOP ROW: Panic Meter + Stats -->
+  <div class="grid-top animate-in delay-2">
+
+    <!-- PANIC METER -->
+    <div class="card panic-card panel-glow-red" style="position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(239,68,68,0.5),transparent);border-radius:2px;"></div>
+      <div class="card-header">
+        <span class="card-title">Market Panic Index</span>
+        <span class="card-badge badge-yellow">ELEVATED</span>
+      </div>
+      <div class="panic-inner">
+        <div class="panic-score-display">
+          <div class="panic-number" id="panicNum">4</div>
+          <div class="panic-denom">/10</div>
+        </div>
+        <div class="panic-label">Current Panic Level</div>
+
+        <div class="panic-gauge-wrap">
+          <div class="panic-gauge-track">
+            <div class="panic-gauge-fill" id="panicFill"></div>
+            <div class="panic-gauge-thumb" id="panicThumb"></div>
+          </div>
+          <div class="panic-ticks">
+            <span class="panic-tick">0</span>
+            <span class="panic-tick">2</span>
+            <span class="panic-tick">4</span>
+            <span class="panic-tick">6</span>
+            <span class="panic-tick">8</span>
+            <span class="panic-tick">10</span>
+          </div>
+          <div class="panic-labels-row">
+            <span class="panic-label-item" style="color:#10b981;">Calm</span>
+            <span class="panic-label-item" style="color:#f59e0b;">Elevated</span>
+            <span class="panic-label-item" style="color:#ef4444;">Extreme Fear</span>
+          </div>
+        </div>
+
+        <div class="panic-sentiment">
+          <span>⚠</span>
+          <span>Cautious — Monitor Closely</span>
+        </div>
+
+        <div class="panic-data-row" style="width:calc(100% + 52px);margin-left:-26px;margin-bottom:-28px;">
+          <div class="panic-data-item">
+            <div class="panic-data-val" style="color:#f59e0b;">+2.1</div>
+            <div class="panic-data-key">24h Δ</div>
+          </div>
+          <div class="panic-data-item">
+            <div class="panic-data-val">6.2</div>
+            <div class="panic-data-key">7d High</div>
+          </div>
+          <div class="panic-data-item">
+            <div class="panic-data-val">1.8</div>
+            <div class="panic-data-key">7d Low</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: stats 3+3 + mini chart -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="grid-stats">
+        <!-- STAT 1: Active FUD -->
+        <div class="card stat-card accent-red" style="position:relative;">
+          <div class="top-accent" style="background:linear-gradient(90deg,transparent,rgba(239,68,68,0.4),transparent);"></div>
+          <div class="stat-icon" style="background:rgba(239,68,68,0.1);">🚨</div>
+          <div class="stat-value gradient-red" style="background:linear-gradient(135deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="stat-fud">3</div>
+          <div class="stat-label">Active FUD Events</div>
+          <div class="stat-delta delta-up">▲ +1 in 1h</div>
+          <svg class="stat-sparkline sparkline-svg" viewBox="0 0 80 50">
+            <polyline points="0,40 12,35 24,38 36,20 48,25 60,15 72,18 80,12" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- STAT 2: Influencers -->
+        <div class="card stat-card accent-blue" style="position:relative;">
+          <div class="top-accent" style="background:linear-gradient(90deg,transparent,rgba(79,143,255,0.4),transparent);"></div>
+          <div class="stat-icon" style="background:rgba(79,143,255,0.1);">👤</div>
+          <div class="stat-value" style="background:linear-gradient(135deg,#4f8fff,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="stat-inf">247</div>
+          <div class="stat-label">Influencers Tracked</div>
+          <div class="stat-delta delta-up">▲ +12 this week</div>
+          <svg class="stat-sparkline sparkline-svg" viewBox="0 0 80 50">
+            <polyline points="0,45 12,42 24,38 36,35 48,30 60,28 72,22 80,18" fill="none" stroke="#4f8fff" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- STAT 3: Entities -->
+        <div class="card stat-card accent-purple" style="position:relative;">
+          <div class="top-accent" style="background:linear-gradient(90deg,transparent,rgba(139,92,246,0.4),transparent);"></div>
+          <div class="stat-icon" style="background:rgba(139,92,246,0.1);">🏛</div>
+          <div class="stat-value" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="stat-ent">42</div>
+          <div class="stat-label">Entities Tracked</div>
+          <div class="stat-delta delta-neutral">→ Stable</div>
+          <svg class="stat-sparkline sparkline-svg" viewBox="0 0 80 50">
+            <polyline points="0,30 12,28 24,32 36,29 48,31 60,28 72,30 80,28" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- STAT 4 -->
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(16,185,129,0.1);">📡</div>
+          <div class="stat-value" style="background:linear-gradient(135deg,#10b981,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">99.4%</div>
+          <div class="stat-label">Signal Accuracy</div>
+          <div class="stat-delta delta-up">▲ +0.2% vs last month</div>
+        </div>
+
+        <!-- STAT 5 -->
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.1);">⚡</div>
+          <div class="stat-value" style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">1.4s</div>
+          <div class="stat-label">Avg Detection Time</div>
+          <div class="stat-delta delta-up">▲ -0.3s faster</div>
+        </div>
+
+        <!-- STAT 6 -->
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(236,72,153,0.1);">🔗</div>
+          <div class="stat-value" style="background:linear-gradient(135deg,#ec4899,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">18.2M</div>
+          <div class="stat-label">On-chain Tx Monitored</div>
+          <div class="stat-delta delta-up">▲ Live</div>
+        </div>
+      </div>
+
+      <!-- Activity Chart -->
+      <div class="card" style="flex:1;">
+        <div class="card-header">
+          <span class="card-title">FUD Activity — 24h</span>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);">
+              <span style="width:8px;height:8px;border-radius:2px;background:rgba(239,68,68,0.7);display:inline-block;"></span>High
+            </span>
+            <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);">
+              <span style="width:8px;height:8px;border-radius:2px;background:rgba(245,158,11,0.7);display:inline-block;"></span>Medium
+            </span>
+            <span class="card-badge badge-blue">LIVE</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="activityChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MID ROW: FUD Feed + Leaderboard -->
+  <div class="grid-mid animate-in delay-3">
+
+    <!-- FUD FEED -->
+    <div class="card panel-glow-red" style="position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(239,68,68,0.3),transparent);"></div>
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="card-title">Live FUD Feed</span>
+          <div class="live-indicator"><div class="live-dot"></div></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="card-badge badge-red">3 ACTIVE</span>
+          <button class="btn-secondary" style="padding:4px 12px;font-size:11px;">Filter</button>
+        </div>
+      </div>
+
+      <div class="fud-feed">
+
+        <!-- FUD ITEM 1 - HIGH -->
+        <div class="fud-item">
+          <div class="fud-severity-bar" style="background:linear-gradient(180deg,#ef4444,#dc2626);box-shadow:0 0 10px rgba(239,68,68,0.4);"></div>
+          <div class="fud-content">
+            <div class="fud-meta">
+              <span class="fud-source">@CryptoWhaleSpy</span>
+              <span class="fud-trust" style="color:#ef4444;">TRUST: 12/100</span>
+              <span class="card-badge badge-red" style="font-size:9px;">EXCHANGE</span>
+              <span class="fud-time">2 min ago</span>
+            </div>
+            <div class="fud-headline">"BREAKING: Binance is insolvent. Internal sources confirm $4B hole in reserves. Mass withdrawal imminent. Get your funds out NOW. Not financial advice."</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <div class="fud-verdict">
+                <span class="verdict-dot" style="background:#ef4444;box-shadow:0 0 6px #ef4444;"></span>
+                AI Verdict: <strong style="color:#ef4444;margin-left:4px;">FABRICATED FUD</strong>
+              </div>
+              <div class="fud-verdict">🔗 4 similar posts detected</div>
+              <div class="fud-verdict">📊 Amplified by 847 bots</div>
+            </div>
+          </div>
+          <div class="fud-severity-chip">
+            <span class="severity-label" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">CRITICAL</span>
+            <span class="impact-score" style="color:#ef4444;">9.1</span>
+            <span class="impact-label">Impact</span>
+          </div>
+        </div>
+
+        <!-- FUD ITEM 2 - MEDIUM -->
+        <div class="fud-item">
+          <div class="fud-severity-bar" style="background:linear-gradient(180deg,#f59e0b,#d97706);box-shadow:0 0 10px rgba(245,158,11,0.4);"></div>
+          <div class="fud-content">
+            <div class="fud-meta">
+              <span class="fud-source">Decrypt Media</span>
+              <span class="fud-trust" style="color:#10b981;">TRUST: 78/100</span>
+              <span class="card-badge badge-yellow" style="font-size:9px;">MEDIA</span>
+              <span class="fud-time">18 min ago</span>
+            </div>
+            <div class="fud-headline">"SEC reportedly preparing new enforcement actions against three major DeFi protocols. Sources indicate subpoenas issued to Uniswap Labs and Compound developers."</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <div class="fud-verdict">
+                <span class="verdict-dot" style="background:#f59e0b;box-shadow:0 0 6px #f59e0b;"></span>
+                AI Verdict: <strong style="color:#f59e0b;margin-left:4px;">UNVERIFIED — MODERATE RISK</strong>
+              </div>
+              <div class="fud-verdict">⚖ Awaiting SEC confirmation</div>
+            </div>
+          </div>
+          <div class="fud-severity-chip">
+            <span class="severity-label" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">MEDIUM</span>
+            <span class="impact-score" style="color:#f59e0b;">5.4</span>
+            <span class="impact-label">Impact</span>
+          </div>
+        </div>
+
+        <!-- FUD ITEM 3 - LOW/CONTAINED -->
+        <div class="fud-item">
+          <div class="fud-severity-bar" style="background:linear-gradient(180deg,#10b981,#059669);box-shadow:0 0 10px rgba(16,185,129,0.4);"></div>
+          <div class="fud-content">
+            <div class="fud-meta">
+              <span class="fud-source">@QuantumChainAnalyst</span>
+              <span class="fud-trust" style="color:#10b981;">TRUST: 91/100</span>
+              <span class="card-badge badge-green" style="font-size:9px;">ANALYST</span>
+              <span class="fud-time">41 min ago</span>
+            </div>
+            <div class="fud-headline">"Earlier Tether depegging rumors are FALSE. USDT reserves confirmed via independent attestation by Moore Cayman. $1:1 backing verified at 102.3% ratio."</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <div class="fud-verdict">
+                <span class="verdict-dot" style="background:#10b981;box-shadow:0 0 6px #10b981;"></span>
+                AI Verdict: <strong style="color:#10b981;margin-left:4px;">VERIFIED — FUD NEUTRALIZED</strong>
+              </div>
+              <div class="fud-verdict">✓ 3 independent sources confirmed</div>
+            </div>
+          </div>
+          <div class="fud-severity-chip">
+            <span class="severity-label" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);">CONTAINED</span>
+            <span class="impact-score" style="color:#10b981;">1.8</span>
+            <span class="impact-label">Impact</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:center;">
+        <button class="btn-secondary" style="width:100%;text-align:center;">View All 127 Detected Events →</button>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="card panel-glow-purple" style="position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,0.3),transparent);"></div>
+      <div class="card-header">
+        <span class="card-title">Influencer Trust Index</span>
+        <span class="card-badge badge-purple">247 TRACKED</span>
+      </div>
+
+      <div class="leaderboard-tabs">
+        <div class="lb-tab active" onclick="switchTab(this,'trusted')">✓ Most Trusted</div>
+        <div class="lb-tab" onclick="switchTab(this,'untrusted')">⚠ Least Trusted</div>
+      </div>
+
+      <div class="lb-list" id="lb-trusted">
+        <!-- TOP TRUSTED -->
+        <div class="lb-item">
+          <div class="lb-rank" style="color:#f59e0b;">👑</div>
+          <div class="lb-info">
+            <div class="lb-name">Vitalik Buterin <span class="verified-badge">✓</span></div>
+            <div class="lb-handle">@VitalikButerin · 5.2M followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#10b981,#22d3ee);" data-target="98"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#10b981;font-size:16px;font-weight:700;">98</div>
+            <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">02</div>
+          <div class="lb-info">
+            <div class="lb-name">Nic Carter <span class="verified-badge">✓</span></div>
+            <div class="lb-handle">@nic__carter · 287K followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#10b981,#22d3ee);" data-target="94"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#10b981;font-size:16px;font-weight:700;">94</div>
+            <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">03</div>
+          <div class="lb-info">
+            <div class="lb-name">QuantumChainAnalyst <span class="verified-badge">✓</span></div>
+            <div class="lb-handle">@QuantumChainAnalyst · 89K followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#10b981,#22d3ee);" data-target="91"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#10b981;font-size:16px;font-weight:700;">91</div>
+            <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">04</div>
+          <div class="lb-info">
+            <div class="lb-name">Lyn Alden <span class="verified-badge">✓</span></div>
+            <div class="lb-handle">@LynAldenContact · 1.1M followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#10b981,#22d3ee);" data-target="89"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#10b981;font-size:16px;font-weight:700;">89</div>
+            <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">05</div>
+          <div class="lb-info">
+            <div class="lb-name">PlanB</div>
+            <div class="lb-handle">@100trillionUSD · 1.8M followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#10b981,#22d3ee);" data-target="83"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#10b981;font-size:16px;font-weight:700;">83</div>
+            <div style="font-size:9px;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lb-list" id="lb-untrusted" style="display:none;">
+        <!-- LEAST TRUSTED -->
+        <div class="lb-item">
+          <div class="lb-rank" style="color:#ef4444;">⚠</div>
+          <div class="lb-info">
+            <div class="lb-name">CryptoWhaleSpy</div>
+            <div class="lb-handle">@CryptoWhaleSpy · 412K followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);" data-target="12"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#ef4444;font-size:16px;font-weight:700;">12</div>
+            <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">02</div>
+          <div class="lb-info">
+            <div class="lb-name">PumpMasterXXL</div>
+            <div class="lb-handle">@PumpMasterXXL · 892K followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);" data-target="18"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#ef4444;font-size:16px;font-weight:700;">18</div>
+            <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">03</div>
+          <div class="lb-info">
+            <div class="lb-name">AlphaKingDefi</div>
+            <div class="lb-handle">@AlphaKingDefi · 234K followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);" data-target="23"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#ef4444;font-size:16px;font-weight:700;">23</div>
+            <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">04</div>
+          <div class="lb-info">
+            <div class="lb-name">MoonBoys2049</div>
+            <div class="lb-handle">@MoonBoys2049 · 567K followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);" data-target="29"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#ef4444;font-size:16px;font-weight:700;">29</div>
+            <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+
+        <div class="lb-item">
+          <div class="lb-rank">05</div>
+          <div class="lb-info">
+            <div class="lb-name">RektReporter</div>
+            <div class="lb-handle">@RektReporter · 189K followers</div>
+            <div style="margin-top:6px;">
+              <div class="lb-bar-track" style="width:160px;"><div class="lb-bar-fill" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);" data-target="31"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div class="lb-score" style="color:#ef4444;font-size:16px;font-weight:700;">31</div>
+            <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-top:2px;">Trust</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:12px 22px;border-top:1px solid var(--border);">
+        <div class="status-row" style="padding:0;gap:14px;">
+          <div class="status-pill"><div class="status-dot" style="background:#10b981;"></div>High Confidence: 89</div>
+          <div class="status-pill"><div class="status-dot" style="background:#f59e0b;"></div>Neutral: 121</div>
+          <div class="status-pill"><div class="status-dot" style="background:#ef4444;"></div>FUD Risk: 37</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW: Entity Health + Heatmap -->
+  <div class="grid-bottom animate-in delay-4">
+
+    <!-- ENTITY HEALTH -->
+    <div class="card panel-glow-blue" style="position:relative;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,143,255,0.3),transparent);"></div>
+      <div class="card-header">
+        <span class="card-title">Entity Health Monitor</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="card-badge badge-blue">42 ENTITIES</span>
+          <button class="btn-secondary" style="padding:4px 12px;font-size:11px;">All →</button>
+        </div>
+      </div>
+
+      <div class="entity-grid">
+
+        <!-- Binance -->
+        <div class="entity-item">
+          <div class="entity-header">
+            <div class="entity-info">
+              <div class="entity-logo" style="background:rgba(245,158,11,0.15);font-size:18px;">🔶</div>
+              <div>
+                <div class="entity-name">Binance</div>
+                <div class="entity-type">Exchange · CEX</div>
+              </div>
+            </div>
+            <div class="entity-score-display">
+              <div class="entity-score-num" style="color:#f59e0b;">72</div>
+              <div class="entity-score-label">Health</div>
+            </div>
+          </div>
+          <div class="entity-health-bar">
+            <div class="entity-health-fill" style="background:linear-gradient(90deg,#f59e0b,#fbbf24);" data-target="72"></div>
+          </div>
+          <div class="entity-stats-row">
+            <div class="entity-stat">FUD: <span style="color:#f59e0b;">HIGH</span></div>
+            <div class="entity-stat">Alerts: <span>4</span></div>
+            <div class="entity-stat">Reserve: <span style="color:#10b981;">VERIFIED</span></div>
+          </div>
+        </div>
+
+        <!-- Tether -->
+        <div class="entity-item">
+          <div class="entity-header">
+            <div class="entity-info">
+              <div class="entity-logo" style="background:rgba(16,185,129,0.15);font-size:18px;">💚</div>
+              <div>
+                <div class="entity-name">Tether</div>
+                <div class="entity-type">Stablecoin · USDT</div>
+              </div>
+            </div>
+            <div class="entity-score-display">
+              <div class="entity-score-num" style="color:#10b981;">88</div>
+              <div class="entity-score-label">Health</div>
+            </div>
+          </div>
+          <div class="entity-health-bar">
+            <div class="entity-health-fill" style="background:linear-gradient(90deg,#10b981,#34d399);" data-target="88"></div>
+          </div>
+          <div class="entity-stats-row">
+            <div class="entity-stat">FUD: <span style="color:#f59e0b;">MEDIUM</span></div>
+            <div class="entity-stat">Alerts: <span>1</span></div>
+            <div class="entity-stat">Backing: <span style="color:#10b981;">102.3%</span></div>
+          </div>
+        </div>
+
+        <!-- Coinbase -->
+        <div class="entity-item">
+          <div class="entity-header">
+            <div class="entity-info">
+              <div class="entity-logo" style="background:rgba(79,143,255,0.15);font-size:18px;">🔵</div>
+              <div>
+                <div class="entity-name">Coinbase</div>
+                <div class="entity-type">Exchange · NASDAQ</div>
+              </div>
+            </div>
+            <div class="entity-score-display">
+              <div class="entity-score-num" style="color:#4f8fff;">94</div>
+              <div class="entity-score-label">Health</div>
+            </div>
+          </div>
+          <div class="entity-health-bar">
+            <div class="entity-health-fill" style="background:linear-gradient(90deg,#4f8fff,#22d3ee);" data-target="94"></div>
+          </div>
+          <div class="entity-stats-row">
+            <div class="entity-stat">FUD: <span style="color:#10b981;">LOW</span></div>
+            <div class="entity-stat">Alerts: <span>0</span></div>
+            <div class="entity-stat">SEC: <span style="color:#10b981;">COMPLIANT</span></div>
+          </div>
+        </div>
+
+        <!-- Ethereum -->
+        <div class="entity-item">
+          <div class="entity-header">
+            <div class="entity-info">
+              <div class="entity-logo" style="background:rgba(139,92,246,0.15);font-size:18px;">💎</div>
+              <div>
+                <div class="entity-name">Ethereum</div>
+                <div class="entity-type">L1 Protocol · ETH</div>
+              </div>
+            </div>
+            <div class="entity-score-display">
+              <div class="entity-score-num" style="color:#8b5cf6;">96</div>
+              <div class="entity-score-label">Health</div>
+            </div>
+          </div>
+          <div class="entity-health-bar">
+            <div class="entity-health-fill" style="background:linear-gradient(90deg,#8b5cf6,#ec4899);" data-target="96"></div>
+          </div>
+          <div class="entity-stats-row">
+            <div class="entity-stat">FUD: <span style="color:#10b981;">MINIMAL</span></div>
+            <div class="entity-stat">Alerts: <span>0</span></div>
+            <div class="entity-stat">Consensus: <span style="color:#10b981;">STABLE</span></div>
+          </div>
+        </div>
+
+        <!-- Solana - Full Width -->
+        <div class="entity-item" style="grid-column:1/-1;border-right:none;">
+          <div style="display:flex;align-items:center;gap:20px;">
+            <div class="entity-info" style="flex:1;margin-bottom:0;">
+              <div class="entity-logo" style="background:rgba(34,211,238,0.15);font-size:18px;">⚡</div>
+              <div style="flex:1;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                  <div>
+                    <div class="entity-name" style="margin-bottom:2px;">Solana</div>
+                    <div class="entity-type">L1 Protocol · SOL</div>
+                  </div>
+                  <div class="entity-score-display">
+                    <div class="entity-score-num" style="color:#22d3ee;">79</div>
+                    <div class="entity-score-label">Health</div>
+                  </div>
+                </div>
+                <div class="entity-health-bar" style="margin-bottom:8px;">
+                  <div class="entity-health-fill" style="background:linear-gradient(90deg,#22d3ee,#4f8fff);" data-target="79"></div>
+                </div>
+                <div class="entity-stats-row">
+                  <div class="entity-stat">FUD: <span style="color:#f59e0b;">MEDIUM</span></div>
+                  <div class="entity-stat">Alerts: <span>2</span></div>
+                  <div class="entity-stat">Uptime: <span style="color:#10b981;">99.97%</span></div>
+                  <div class="entity-stat">TPS: <span>65,000</span></div>
+                  <div class="entity-stat">Validators: <span>1,875</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE: Heatmap + Mini Stats -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- FUD HEATMAP -->
+      <div class="card" style="flex:1;">
+        <div class="card-header">
+          <span class="card-title">FUD Heatmap — Last 12 Weeks</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:10px;color:var(--text-muted);">Less</span>
+            <div style="display:flex;gap:2px;">
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.04);"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,0.15);"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,0.4);"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,0.7);"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,1);"></div>
+            </div>
+            <span style="font-size:10px;color:var(--text-muted);">More</span>
+          </div>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid">
+          <!-- Rendered by JS -->
+        </div>
+        <div style="padding:0 22px 14px;display:flex;gap:20px;">
+          <div style="font-size:11px;color:var(--text-muted);">Mon</div>
+          <div style="font-size:11px;color:var(--text-muted);">Wed</div>
+          <div style="font-size:11px;color:var(--text-muted);">Fri</div>
+        </div>
+      </div>
+
+      <!-- NETWORK STATUS -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Network Status</span>
+          <span class="card-badge badge-green">ALL SYSTEMS GO</span>
+        </div>
+        <div style="padding:16px 22px;display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
+              <div class="status-dot" style="background:#10b981;box-shadow:0 0 6px #10b981;width:6px;height:6px;border-radius:50%;"></div>
+              Signal Intelligence Engine
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#10b981;">ONLINE</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
+              <div class="status-dot" style="background:#10b981;box-shadow:0 0 6px #10b981;width:6px;height:6px;border-radius:50%;"></div>
+              On-chain Data Feed
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#10b981;">ONLINE</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
+              <div class="status-dot" style="background:#10b981;box-shadow:0 0 6px #10b981;width:6px;height:6px;border-radius:50%;"></div>
+              AI Verdict Engine v3.1
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#10b981;">ONLINE</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
+              <div class="status-dot" style="background:#f59e0b;box-shadow:0 0 6px #f59e0b;width:6px;height:6px;border-radius:50%;"></div>
+              Social Scraper — Twitter/X
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#f59e0b;">DEGRADED</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
+              <div class="status-dot" style="background:#10b981;box-shadow:0 0 6px #10b981;width:6px;height:6px;border-radius:50%;"></div>
+              Entity Health Scoring
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#10b981;">ONLINE</span>
+          </div>
+
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">Uptime (30d)</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-green);font-weight:700;">99.97%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">Data latency</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-blue);font-weight:700;">&lt; 1.4s</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTBAR -->
+<footer class="footbar">
+  <div class="footbar-left">NEXUS INTELLIGENCE v2.4.1 · © 2025 Nexus Labs Inc. · All data is for informational purposes only.</div>
+  <div class="footbar-right">
+    <span class="footbar-link">Privacy</span>
+    <span class="footbar-link">Terms</span>
+    <span class="footbar-link">API Docs</span>
+    <span class="footbar-link">Status</span>
+    <span class="footbar-link" style="color:var(--accent-blue);">Support</span>
+  </div>
+</footer>
+
+<script>
+// ==========================================
+// CLOCK
+// ==========================================
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getUTCHours()).padStart(2,'0');
+  const m = String(now.getUTCMinutes()).padStart(2,'0');
+  const s = String(now.getUTCSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s} UTC`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ==========================================
+// PANIC METER ANIMATION
+// ==========================================
+setTimeout(() => {
+  const val = 4;
+  const pct = (val / 10) * 100;
+  document.getElementById('panicFill').style.width = pct + '%';
+  document.getElementById('panicThumb').style.left = pct + '%';
+}, 400);
+
+// ==========================================
+// PROGRESS BARS ANIMATION
+// ==========================================
+function animateBars() {
+  const bars = document.querySelectorAll('[data-target]');
+  bars.forEach((bar, i) => {
+    setTimeout(() => {
+      bar.style.width = bar.dataset.target + '%';
+    }, 600 + i * 80);
+  });
+}
+setTimeout(animateBars, 300);
+
+// ==========================================
+// LEADERBOARD TAB SWITCH
+// ==========================================
+function switchTab(el, tab) {
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('lb-trusted').style.display = tab === 'trusted' ? 'block' : 'none';
+  document.getElementById('lb-untrusted').style.display = tab === 'untrusted' ? 'block' : 'none';
+  setTimeout(animateBars, 100);
+}
+
+// ==========================================
+// ACTIVITY CHART
+// ==========================================
+const ctx = document.getElementById('activityChart').getContext('2d');
+
+const hours = Array.from({length:24}, (_,i) => `${String(i).padStart(2,'0')}:00`);
+const highData = [0,0,1,0,0,0,2,3,1,2,4,5,3,7,6,4,8,5,3,6,4,2,3,1];
+const medData  = [1,2,1,3,1,2,3,4,6,7,8,6,9,10,8,7,9,11,8,7,6,5,4,3];
+
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: hours,
+    datasets: [
+      {
+        label: 'High Severity',
+        data: highData,
+        backgroundColor: 'rgba(239,68,68,0.65)',
+        borderRadius: 3,
+        borderSkipped: false,
+      },
+      {
+        label: 'Medium Severity',
+        data: medData,
+        backgroundColor: 'rgba(245,158,11,0.4)',
+        borderRadius: 3,
+        borderSkipped: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0d0d1a',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        titleColor: '#f0f0ff',
+        bodyColor: '#7878a0',
+        titleFont: { family: 'JetBrains Mono', size: 11 },
+        bodyFont: { family: 'Manrope', size: 12 },
+        padding: 10,
+        cornerRadius: 8,
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+        ticks: {
+          color: '#3d3d5c',
+          font: { family: 'JetBrains Mono', size: 9 },
+          maxTicksLimit: 12,
+        },
+        border: { display: false }
+      },
+      y: {
+        stacked: true,
+        grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+        ticks: {
+          color: '#3d3d5c',
+          font: { family: 'JetBrains Mono', size: 9 },
+          stepSize: 5,
+        },
+        border: { display: false }
+      }
+    }
+  }
+});
+
+// ==========================================
+// HEATMAP
+// ==========================================
+const heatGrid = document.getElementById('heatmapGrid');
+const intensities = [
+  0,1,0,2,1,0,0,
+  1,0,3,4,2,1,0,
+  0,2,1,5,3,2,1,
+  1,0,2,3,4,3,2,
+  2,1,0,1,2,1,0,
+  0,3,4,5,4,3,2,
+  1,2,3,4,3,2,1,
+  2,3,4,5,5,4,3,
+  3,2,1,3,4,5,4,
+  4,3,2,1,2,3,2,
+  1,2,3,4,3,2,1,
+  0,1,2,3,2,1,0
+];
+const colorsMap = [
+  'rgba(255,255,255,0.04)',
+  'rgba(239,68,68,0.12)',
+  'rgba(239,68,68,0.25)',
+  'rgba(239,68,68,0.45)',
+  'rgba(239,68,68,0.65)',
+  'rgba(239,68,68,0.9)'
+];
+intensities.forEach(val => {
+  const cell = document.createElement('div');
+  cell.className = 'heatmap-cell';
+  cell.style.background = colorsMap[val] || colorsMap[0];
+  if(val >= 4) cell.style.boxShadow = '0 0 4px rgba(239,68,68,0.3)';
+  cell.title = `FUD Events: ${val * 3 + Math.floor(Math.random()*3)}`;
+  heatGrid.appendChild(cell);
+});
+
+// ==========================================
+// TICKER SCROLL DUPLICATE
+// ==========================================
+const ts = document.getElementById('tickerScroll');
+ts.innerHTML = ts.innerHTML + ts.innerHTML;
+
+// ==========================================
+// LIVE COUNTER UPDATES (simulated)
+// ==========================================
+let fudCount = 3;
+setInterval(() => {
+  // Randomly bump FUD counter occasionally
+  if(Math.random() > 0.95) {
+    fudCount++;
+    const el = document.getElementById('stat-fud');
+    el.style.transform = 'scale(1.1)';
+    el.textContent = fudCount;
+    setTimeout(() => { el.style.transform = 'scale(1)'; }, 200);
+  }
+}, 8000);
+
+// ==========================================
+// NAV CLICK
+// ==========================================
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', function() {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ==========================================
+// PANIC METER MICRO ANIMATION
+// ==========================================
+let panicDir = 1;
+let panicOffset = 0;
+setInterval(() => {
+  panicOffset += panicDir * 0.02;
+  if(panicOffset > 0.3) panicDir = -1;
+  if(panicOffset < -0.3) panicDir = 1;
+  const base = 40;
+  const newPct = base + panicOffset;
+  document.getElementById('panicFill').style.width = newPct + '%';
+  document.getElementById('panicThumb').style.left = newPct + '%';
+}, 100);
+
+</script>
+
+</body>
+</html>
