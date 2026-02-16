@@ -1,178 +1,172 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { Lock, ArrowRight } from "lucide-react"
 
-/* ---------------- SAMPLE DATA ---------------- */
-
-const fudFeed = [
-  { id: 1, source: 'Binance', headline: 'Withdrawal delay rumor spreading', trustScore: 42, severity: 3 },
-  { id: 2, source: 'Ethereum', headline: 'Validator centralization debate', trustScore: 61, severity: 2 },
-  { id: 3, source: 'Solana', headline: 'Network instability speculation', trustScore: 75, severity: 1 },
-]
-
-const topSpreaders = [
-  { name: '@FUDKing', riskScore: 88 },
-  { name: '@CryptoDrama', riskScore: 76 },
-  { name: '@ChainWatcher', riskScore: 71 },
-]
-
-const targetedEntities = [
-  { name: 'Binance', pressure: 84 },
-  { name: 'Ethereum', pressure: 67 },
-  { name: 'Solana', pressure: 61 },
-]
-
-const influencerRanking = [
-  { name: '@TopInfluencer', trustScore: 94 },
-  { name: '@ResearchAlpha', trustScore: 89 },
-  { name: '@ChainInsight', trustScore: 82 },
-]
-
-const topEntities = [
-  { name: 'Bitcoin', health: 92 },
-  { name: 'Ethereum', health: 85 },
-  { name: 'Binance', health: 79 },
-]
-
-/* ---------------- HELPERS ---------------- */
-
-const severityColor = (level: number) => {
-  if (level === 3) return 'bg-red-500'
-  if (level === 2) return 'bg-yellow-500'
-  return 'bg-emerald-500'
-}
-
-/* ---------------- PAGE ---------------- */
+import { CredibilityTicker } from "@/components/home/credibility-ticker"
+import { PanicMeterLarge } from "@/components/home/panic-meter-large"
+import { FudFeedPreview } from "@/components/home/fud-feed-preview"
+import { RiskVelocityCard } from "@/components/home/risk-velocity-card"
+import { InfluencerTable } from "@/components/home/influencer-table"
+import { InstitutionalRankings } from "@/components/home/institutional-rankings"
+import { MarketOverview } from "@/components/home/market-overview"
+import { NarrativeHeatmap } from "@/components/home/narrative-heatmap"
+import { EntityHealthGrid } from "@/components/home/entity-health-grid"
 
 export default function Home() {
-  const [search, setSearch] = useState('')
-
   return (
-    <div className="min-h-screen bg-[#05070d] text-white px-6 lg:px-16 py-10 space-y-16">
+    <div className="bg-[#05070d] text-gray-300">
 
-      {/* 1. PANIC METER */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Panic Meter</h2>
-        <div className="bg-red-900/30 border border-red-500/30 p-6 rounded-lg">
-          <div className="flex justify-between">
-            <span className="text-xl font-bold text-red-400">
-              Elevated Market Panic
-            </span>
-            <span className="bg-red-500 px-3 py-1 text-sm rounded">
-              HIGH
-            </span>
+      {/* SECTION 1 */}
+      <section className="py-16 border-b border-gray-800/30 relative">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+
+          <div className="mb-8">
+            <h1 className="text-4xl md:text-6xl font-semibold text-white tracking-tight mb-4">
+              Nexus Intelligence
+            </h1>
+
+            <h2 className="text-base md:text-xl text-gray-400 mb-4">
+              Quantifying Narrative Risk in Digital Asset Markets.
+            </h2>
+
+            <p className="text-sm text-gray-500 max-w-2xl leading-relaxed">
+              Advanced credibility scoring infrastructure for institutional participants.
+              Real-time FUD detection, entity health monitoring, and influencer trust
+              analysis across decentralized markets.
+            </p>
           </div>
-          <div className="mt-4 h-2 bg-white/10 rounded-full">
-            <div className="h-2 bg-red-500 w-4/5 rounded-full" />
+
+          <div className="mb-6">
+            <CredibilityTicker />
+          </div>
+
+          <div className="mb-10">
+            <button className="group flex items-center gap-3 bg-[#0a0d15] hover:bg-[#0f1419] border border-gray-800 hover:border-gray-700 px-5 py-2.5 rounded transition-all">
+              <Lock className="w-4 h-4 text-amber-500" />
+              <span className="text-white text-sm font-medium tracking-wide">
+                ACCESS TERMINAL
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
+            </button>
+          </div>
+
+          <MarketOverview />
+        </div>
+
+        <GridTexture />
+      </section>
+
+
+      {/* SECTION 2 */}
+      <section className="py-16 border-b border-gray-800/30 relative">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+
+          <div className="mb-6">
+            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
+              FUD Intelligence System
+            </h2>
+            <p className="text-xs text-gray-600">
+              Real-time fear, uncertainty, and doubt monitoring infrastructure
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="md:col-span-2">
+              <PanicMeterLarge />
+            </div>
+            <RiskVelocityCard />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <FudFeedPreview />
+            </div>
+            <NarrativeHeatmap />
           </div>
         </div>
+
+        <GridTexture />
       </section>
 
-      {/* 2. LIVE FUD FEED */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Live FUD Feed</h2>
-        <div className="space-y-3">
-          {fudFeed.map(item => (
-            <div key={item.id} className="bg-[#0b0f17] border border-white/10 p-4 rounded-lg flex gap-4 items-center">
-              <div className={`w-1 h-12 rounded ${severityColor(item.severity)}`} />
-              <div className="flex-1">
-                <p className="font-semibold">{item.source}</p>
-                <p className="text-white/60 text-sm">{item.headline}</p>
-              </div>
-              <span className="font-mono text-sm">{item.trustScore}/100</span>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* 3. STAT CARDS */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { label: 'Total FUD Events', value: 134 },
-          { label: 'Active Spreaders', value: 27 },
-          { label: 'Entities Under Pressure', value: 12 },
-        ].map((card, i) => (
-          <div key={i} className="bg-[#0b0f17] border border-white/10 p-6 rounded-lg">
-            <p className="text-white/50 text-sm">{card.label}</p>
-            <p className="text-2xl font-bold mt-1">{card.value}</p>
+      {/* SECTION 3 */}
+      <section className="py-16 border-b border-gray-800/30 relative">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+
+          <div className="mb-6">
+            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
+              Influence & Credibility Layer
+            </h2>
+            <p className="text-xs text-gray-600">
+              Quantitative analysis of market participant trust metrics
+            </p>
           </div>
-        ))}
-      </section>
 
-      {/* 4. FUD DETECTION SEARCH */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">FUD Detection Search</h2>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search influencer, entity, narrative..."
-          className="w-full bg-[#0b0f17] border border-white/10 p-4 rounded-lg text-white"
-        />
-      </section>
-
-      {/* 5. TOP FUD SPREADERS TODAY */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Top FUD Spreaders Today</h2>
-        <div className="space-y-2">
-          {topSpreaders.map((spreader, i) => (
-            <div key={i} className="flex justify-between bg-[#0b0f17] p-4 border border-white/10 rounded-lg">
-              <span>{spreader.name}</span>
-              <span className="text-red-400 font-mono">{spreader.riskScore}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <InfluencerTable />
             </div>
-          ))}
+            <EntityHealthGrid />
+          </div>
         </div>
+
+        <GridTexture />
       </section>
 
-      {/* 6. MOST TARGETED ENTITIES */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Most Targeted Entities</h2>
-        <div className="space-y-2">
-          {targetedEntities.map((entity, i) => (
-            <div key={i} className="flex justify-between bg-[#0b0f17] p-4 border border-white/10 rounded-lg">
-              <span>{entity.name}</span>
-              <span className="text-yellow-400 font-mono">{entity.pressure}</span>
+
+      {/* SECTION 4 */}
+      <section className="py-16 relative">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+
+          <div className="mb-6">
+            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">
+              Institutional Infrastructure
+            </h2>
+            <p className="text-xs text-gray-600">
+              Exchange rankings, proof of reserves, and on-chain health metrics
+            </p>
+          </div>
+
+          <InstitutionalRankings />
+        </div>
+
+        <GridTexture />
+      </section>
+
+
+      {/* FOOTER */}
+      <footer className="border-t border-gray-800/30 px-4 md:px-6 py-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs">
+          <div className="text-gray-600">
+            © 2026 Nexus Intelligence · Institutional-grade narrative risk infrastructure
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-gray-600">API Status:</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span className="text-gray-500">OPERATIONAL</span>
             </div>
-          ))}
+          </div>
         </div>
-      </section>
-
-      {/* 7. AI VERDICT SUMMARY */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">AI Verdict Summary</h2>
-        <div className="bg-[#0b0f17] border border-white/10 p-6 rounded-lg text-white/70">
-          AI analysis flagged 27 high-risk narratives in the past 24h.
-          Binance and Ethereum show rising narrative pressure velocity.
-          Probability of escalation: 63%.
-        </div>
-      </section>
-
-      {/* 8. INFLUENCER TRUST RANKING */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Influencer Trust Ranking</h2>
-        <div className="space-y-2">
-          {influencerRanking.map((inf, i) => (
-            <div key={i} className="flex justify-between bg-[#0b0f17] p-4 border border-white/10 rounded-lg">
-              <span>{inf.name}</span>
-              <span className="text-emerald-400 font-mono">{inf.trustScore}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 9. TOP ENTITY LIST */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Top Entity List</h2>
-        <div className="space-y-2">
-          {topEntities.map((entity, i) => (
-            <div key={i} className="flex justify-between bg-[#0b0f17] p-4 border border-white/10 rounded-lg">
-              <span>{entity.name}</span>
-              <span className="text-emerald-400 font-mono">{entity.health}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      </footer>
 
     </div>
+  )
+}
+
+
+function GridTexture() {
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none opacity-[0.02]"
+      style={{
+        backgroundImage: `
+          linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+        `,
+        backgroundSize: "24px 24px",
+      }}
+    />
   )
 }
